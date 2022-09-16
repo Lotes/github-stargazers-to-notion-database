@@ -52,13 +52,13 @@ export type CRM = {
 }
 
 export const CRMModule: Module<CRM> = {
-    repositories: (crm) => createDatabase<CRM, Repository, 'address'>(crm, Guids.Repositories, 'address', 
+    repositories: () => createDatabase<Repository, 'address'>(Guids.Repositories, 'address', 
         [
             id(),
             title('Name', 'name'),
             url('Address', 'address')
         ]),
-    persons: (crm) => createDatabase<CRM, Person, 'github'>(crm, Guids.Persons, "github", 
+    persons: (crm) => createDatabase<Person, 'github'>(Guids.Persons, "github", 
         [
             id(),
             title('Name', 'name'),

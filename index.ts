@@ -1,4 +1,3 @@
-import { constants } from "buffer";
 import * as GitHub from "./github/github";
 import * as Notion from "./notion/crm";
 
@@ -16,6 +15,6 @@ const crm = Notion.createCRM();
       email: email ?? undefined,
       github: key,
     };
-    console.log(name);
+    //crm.persons.create(newPerson);
   }  
 })();

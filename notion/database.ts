@@ -2,7 +2,7 @@ import { CreatePageParameters, UpdatePageParameters } from "@notionhq/client/bui
 import { notion } from "./client";
 import { Entity, Changer, Database } from "./types";
 
-export async function * paginate<M, R>(module: M, databaseId: string, changers: Changer<R>[]) {
+export async function * paginate<R>(databaseId: string, changers: Changer<R>[]) {
     let start_cursor: string|undefined = undefined;
     while(true) {
         const response = await notion.databases.query({
@@ -21,11 +21,11 @@ export async function * paginate<M, R>(module: M, databaseId: string, changers: 
     }
 }
 
-export function createDatabase<M, R extends Entity, K extends keyof R>(module: M, databaseId: string, key: K, changers: Changer<R>[]): Database<R, K> {
+export function createDatabase<R extends Entity, K extends keyof R>(databaseId: string, key: K, changers: Changer<R>[]): Database<R, K> {
     const setByKey = new Map<R[K], R>();
     const setById = new Map<string, R>();
     const initialized = (async function ensureInitialized(): Promise<void> {
-        for await (const row of paginate<M, R>(module, databaseId, changers)) {
+        for await (const row of paginate<R>(databaseId, changers)) {
             setByKey.set(row[key], row);
         }
     })();
