@@ -1,4 +1,6 @@
 .env
 node_modules
-index.js
+*.js
+!jest.config.js
 cache/**/*.json
+build/
