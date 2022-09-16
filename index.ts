@@ -1,5 +1,5 @@
 import { constants } from "buffer";
-import * as GitHub from "./github";
+import * as GitHub from "./github/github";
 import * as Notion from "./notion/crm";
 
 const crm = Notion.createCRM();

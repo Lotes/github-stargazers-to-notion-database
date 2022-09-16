@@ -1,26 +1,8 @@
-import { Octokit, RestEndpointMethodTypes } from "@octokit/rest";
-import { env } from "process";
-import { stat, readFile, mkdir, writeFile } from 'fs/promises';
+import { RestEndpointMethodTypes } from '@octokit/rest';
+import { readFile, mkdir, writeFile } from 'fs/promises';
 import { join } from 'path';
-import { createOAuthAppAuth } from "@octokit/auth-oauth-app";
-import { config as initializeFromEnvFile } from "dotenv";
-
-initializeFromEnvFile();
-
-const octokit = new Octokit({ 
-  authStrategy: createOAuthAppAuth,
-  auth: {
-    clientType: "oauth-app",
-    clientId: env.GITHUB_CLIENT_ID,
-    clientSecret: env.GITHUB_SECRET,
-  }
-});
-const exists = async (path: string) => !!(await stat(path).catch(e => false));
-function sleep(ms: number) {
-    return new Promise<void>((resolve) => {
-        setTimeout(resolve, ms);
-    });
-}
+import { exists } from '../utils/exists';
+import { github } from './client';
 
 export async function* getStargazers(owner: string, repo: string) {
     const users = await getCachedStargazersForRepo(owner, repo);
@@ -48,17 +30,10 @@ async function getCachedStargazersForRepo(owner: string, repo: string) {
     return JSON.parse(json) as RestEndpointMethodTypes["activity"]["listStargazersForRepo"]['response']['data'];
 }
 
-function getStargazersForRepo(owner: string, repo: string) {
-    return octokit.paginate(octokit.rest.activity.listStargazersForRepo, {
-      owner, repo, per_page: 100
-    });
-}
-
 async function getCachedUser(login: string) {
     const userFile = join('cache', `${login}.json`);
     if(!await exists(userFile)) {
         const json = await getUser(login);
-        await sleep(200);
         await writeFile(userFile, JSON.stringify(json, null, 2));
         return json;
     }
@@ -66,6 +41,12 @@ async function getCachedUser(login: string) {
     return JSON.parse(json) as RestEndpointMethodTypes["users"]["getByUsername"]['response']['data'];
 }
 
+function getStargazersForRepo(owner: string, repo: string) {
+    return github.paginate(github.rest.activity.listStargazersForRepo, {
+      owner, repo, per_page: 100
+    });
+}
+
 async function getUser(login: string) {
-    return (await octokit.users.getByUsername({username: login})).data;
+    return (await github.users.getByUsername({username: login})).data;
 }
