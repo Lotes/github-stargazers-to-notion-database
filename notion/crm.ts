@@ -1,4 +1,4 @@
-import { Module, inject } from "../inject";
+import { Module, inject } from "../utils/inject";
 import { createDatabase } from "./database";
 import { Database } from "./types";
 import { email, id, relation, title, url } from "./properties";
