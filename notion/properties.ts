@@ -103,7 +103,7 @@ export function relation<R extends Entity, K extends keyof R, S extends Entity, 
         return row && Array.isArray(row[key]) ? (row[key] as unknown as Entity[]).filter(e => e).map(e => e.id).filter(e => e) : [];
     }
     function changed(oldRow: R, newRow: R) {
-        return areEqualsSets<string>(toIds(oldRow), toIds(newRow));
+        return !areEqualsSets<string>(toIds(oldRow), toIds(newRow));
     }
     async function fromPage(page: any, row: R): Promise<void> {
         const relations: Entity[] = page.properties[propertyName].relation;
