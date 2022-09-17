@@ -11,9 +11,9 @@ export interface UserName {
     login: string;
 }
 
-export const getStargazersForRepo = cache((rootDirectory, {owner, name}: RepositoryName) => join(rootDirectory, owner, `${name}.json`), function({owner, name}: RepositoryName) {
+export const getStargazersForRepo = cache((rootDirectory, {owner: ghOwner, name: ghName}: RepositoryName) => join(rootDirectory, ghOwner, `${ghName}.json`), function({owner: ghOwner, name: ghName}: RepositoryName) {
     return github.paginate(github.rest.activity.listStargazersForRepo, {
-      owner, repo: name, per_page: 100
+      owner: ghOwner, repo: ghName, per_page: 100
     });
 });
 

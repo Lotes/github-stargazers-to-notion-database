@@ -2,8 +2,9 @@ import { CreatePageParameters, UpdatePageParameters } from "@notionhq/client/bui
 import { notion } from "./client";
 import { Entity, Changer, Database } from "./types";
 
-export async function * paginate<R>(databaseId: string, changers: Changer<R>[]) {
+export async function paginate<R>(databaseId: string, changers: Changer<R>[]) {
     let start_cursor: string|undefined = undefined;
+    const result: R[] = [];
     while(true) {
         const response = await notion.databases.query({
             database_id: databaseId,
@@ -11,11 +12,11 @@ export async function * paginate<R>(databaseId: string, changers: Changer<R>[]) 
         });
         for (const page of response.results) {
             const row: any = {};
-            changers.forEach(c => c.fromPage(page, row));
-            yield row as R;
+            await Promise.all(changers.map(async c => await c.fromPage(page, row)));
+            result.push(row as R);
         }
         if(!response.has_more) {
-            break;
+            return result;
         }
         start_cursor = response.next_cursor as string;
     }
@@ -25,8 +26,9 @@ export function createDatabase<R extends Entity, K extends keyof R>(databaseId: 
     const setByKey = new Map<R[K], R>();
     const setById = new Map<string, R>();
     const initialized = (async function ensureInitialized(): Promise<void> {
-        for await (const row of paginate<R>(databaseId, changers)) {
+        for (const row of await paginate<R>(databaseId, changers)) {
             setByKey.set(row[key], row);
+            setById.set(row.id, row);
         }
     })();
 
@@ -44,16 +46,18 @@ export function createDatabase<R extends Entity, K extends keyof R>(databaseId: 
         return response.id;
     }
 
-    async function update(id: string, newRow: R): Promise<boolean> {
+    async function update(id: string, newRow: R): Promise<(keyof R)[]> {
         await initialized;
     
         const oldRow = await getById(id);
         let page: UpdatePageParameters = {page_id: id, properties: {}};
         let change = false;
+        const changes: (keyof R)[] = [];
         for (const changer of changers) {
-            const changed = oldRow == null || newRow && changer.changed(oldRow, newRow);
-            change ||= changed;
+            const changed = changer.changed(oldRow, newRow);
+            change = change || changed;
             if(changed) {
+                changes.push(changer.key);
                 changer.toPage(newRow, page);
             }
         }
@@ -62,7 +66,7 @@ export function createDatabase<R extends Entity, K extends keyof R>(databaseId: 
             setByKey.set(newRow[key], newRow);
             setById.set(id, newRow);
         }
-        return change;
+        return changes;
     }
 
     async function get(key: R[K]) {

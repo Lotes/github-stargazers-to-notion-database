@@ -11,6 +11,6 @@ function isSubsetOf<T>(array1: T[], array2: T[]) {
     return false;
 }
 
-function areEqualsSets<T>(a: T[], b: T[]) {
+export function areEqualsSets<T>(a: T[], b: T[]) {
     return isSubsetOf(a, b) && isSubsetOf(b, a);
 }

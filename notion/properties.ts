@@ -1,4 +1,5 @@
-import { Database, Entity } from "./types";
+import { Database, Entity, Changer } from "./types";
+import { areEqualsSets } from '../utils/sets';
 
 export function id<R extends Entity>() {
     function changed(oldRow: R, newRow: R)  {
@@ -9,7 +10,7 @@ export function id<R extends Entity>() {
         return Promise.resolve();
     }
     function toPage(_row: R, _page: any) {}
-    return {changed, fromPage, toPage};
+    return {key: 'id', changed, fromPage, toPage} as Changer<R>;
 }
 
 export function icon<R, K extends keyof R>(key: K) {
@@ -30,7 +31,7 @@ export function icon<R, K extends keyof R>(key: K) {
             };
         }
     };
-    return {changed, fromPage, toPage};
+    return {key, changed, fromPage, toPage};
 }
 
 export function title<R, K extends keyof R>(propertyName: string, key: K) {
@@ -56,7 +57,7 @@ export function title<R, K extends keyof R>(propertyName: string, key: K) {
             };
         }
     };
-    return {changed, fromPage, toPage};
+    return {key, changed, fromPage, toPage};
 }
 
 export function url<R, K extends keyof R>(propertyName: string, key: K) {
@@ -75,7 +76,7 @@ export function url<R, K extends keyof R>(propertyName: string, key: K) {
             };
         }
     };
-    return {changed, fromPage, toPage};
+    return {key, changed, fromPage, toPage};
 }
 
 export function email<R, K extends keyof R>(propertyName: string, key: K) {
@@ -94,18 +95,18 @@ export function email<R, K extends keyof R>(propertyName: string, key: K) {
             };
         }
     };
-    return {changed, fromPage, toPage};
+    return {key, changed, fromPage, toPage};
 }
 
 export function relation<R extends Entity, K extends keyof R, S extends Entity, T extends keyof S>(propertyName: string, key: K, database: Database<S, T>) {
     function toIds(row: R) {
-        return row && Array.isArray(row[key]) ? (row[key] as unknown as Entity[]).filter(e => e).map(e => e.id!) : [];
+        return row && Array.isArray(row[key]) ? (row[key] as unknown as Entity[]).filter(e => e).map(e => e.id).filter(e => e) : [];
     }
     function changed(oldRow: R, newRow: R) {
-        return newRow[key] && areEqualsSets<string>(toIds(oldRow), toIds(newRow));
+        return areEqualsSets<string>(toIds(oldRow), toIds(newRow));
     }
     async function fromPage(page: any, row: R): Promise<void> {
-        const relations: {id: string}[] = page.properties[propertyName].relation;
+        const relations: Entity[] = page.properties[propertyName].relation;
         const ids = relations.map(r => r.id);
         row[key] = await Promise.all(ids.map(id => database.getById(id))) as any;
     }
@@ -117,5 +118,5 @@ export function relation<R extends Entity, K extends keyof R, S extends Entity, 
             };
         }
     };
-    return {changed, fromPage, toPage};
+    return {key, changed, fromPage, toPage};
 }
