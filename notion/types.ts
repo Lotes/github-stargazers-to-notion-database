@@ -1,14 +1,14 @@
-export type Entity = {id?: string};
+export type Entity = {id: string};
 
 export interface Database<R extends Entity, K extends keyof R> {
   readonly id: string;
-  create(row: R): Promise<string>;
+  create(row: Omit<R, 'id'>): Promise<string>;
   all(): Promise<R[]>;
   keyOf(row: R): R[K];
   get(key: R[K]): Promise<R>;
   getById(id: string): Promise<R>;
   has(key: R[K]): Promise<boolean>;
-  update(id: string, newRow: R): Promise<void>;
+  update(id: string, newRow: R): Promise<boolean>;
 }
 
 export interface Changer<R> {

@@ -30,7 +30,7 @@ export function createDatabase<R extends Entity, K extends keyof R>(databaseId: 
         }
     })();
 
-    async function create(row: R): Promise<string> {
+    async function create(row: Exclude<R, 'id'>): Promise<string> {
         await initialized;
 
         let page: CreatePageParameters = {parent: {database_id: databaseId}, properties: {}};
@@ -44,14 +44,14 @@ export function createDatabase<R extends Entity, K extends keyof R>(databaseId: 
         return response.id;
     }
 
-    async function update(id: string, newRow: R): Promise<void> {
+    async function update(id: string, newRow: R): Promise<boolean> {
         await initialized;
-
+    
         const oldRow = await getById(id);
         let page: UpdatePageParameters = {page_id: id, properties: {}};
         let change = false;
         for (const changer of changers) {
-            const changed = changer.changed(oldRow, newRow);
+            const changed = oldRow == null || newRow && changer.changed(oldRow, newRow);
             change ||= changed;
             if(changed) {
                 changer.toPage(newRow, page);
@@ -60,8 +60,9 @@ export function createDatabase<R extends Entity, K extends keyof R>(databaseId: 
         if(change) {
             await notion.pages.update(page);
             setByKey.set(newRow[key], newRow);
-            setById.set(oldRow.id!, newRow);
+            setById.set(id, newRow);
         }
+        return change;
     }
 
     async function get(key: R[K]) {
@@ -97,5 +98,5 @@ export function createDatabase<R extends Entity, K extends keyof R>(databaseId: 
         has,
         create,
         update
-    }
+    };
 }
