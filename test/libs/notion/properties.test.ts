@@ -1,6 +1,6 @@
 import {describe, expect, test} from '@jest/globals';
-import { icon, id, url } from '../../notion/properties';
-import { Entity } from '../../notion/types';
+import { icon, id, url } from '../../../libs/notion/properties';
+import { Entity } from '../../../libs/notion/types';
 
 describe('Notion properties', () => {
     describe('id', () => {

@@ -1,5 +1,5 @@
-import * as GitHub from "./github/queries";
-import * as Notion from "./notion/crm";
+import * as GitHub from "../../libs/github/queries";
+import * as Notion from "./crm";
 
 const crm = Notion.createCRM();
 

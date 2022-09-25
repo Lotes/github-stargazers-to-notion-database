@@ -1,7 +1,7 @@
-import { Module, inject } from "../utils/inject";
-import { createDatabase } from "./database";
-import { Database, Entity } from "./types";
-import { email, icon, id, relation, title, url } from "./properties";
+import { Module, inject } from "../../libs/utils/inject";
+import { createDatabase } from "../../libs/notion/database";
+import { Database, Entity } from "../../libs/notion/types";
+import { email, icon, id, relation, title, url } from "../../libs/notion/properties";
 
 const Guids = {
     Repositories: "f951d237a8a84470996d8c23583621dc",

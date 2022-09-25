@@ -9,7 +9,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import {describe, expect, test} from '@jest/globals';
-import { inject, Module } from '../../utils/inject';
+import { inject, Module } from '../../../libs/utils/inject';
 
 describe('A dependency type', () => {
 
