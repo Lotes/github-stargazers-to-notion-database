@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "tsc && node build/index.js",
+    "start": "tsc && node build/apps/deps-tracker/index.js",
     "test": "jest --config ./jest.config.js",
     "watch": "jest --config ./jest.config.js --watch"
   },

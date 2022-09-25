@@ -31,3 +31,36 @@ export async function* getStargazers(cacheDirectory: string, repo: RepositoryNam
         yield cached;
     }
 }
+
+export interface RepositoryDependencyVersions {
+    owner: string;
+    name: string;
+    versions: string[];
+}
+
+export async function getRepositoriesUsingNpmPackage(packageName: string) {
+    const repos = await github.paginate(github.search.repos, {q: encodeURIComponent(packageName+' language:javascript')});
+    const results: Array<RepositoryDependencyVersions> = [];
+    for (const repo of repos) {
+        const repoEncoded = encodeURIComponent(repo.owner?.name+'/'+repo.name);
+        console.log(repoEncoded)
+        const codes = await github.paginate(github.search.code, {q: 'filename%3Apackage.json+repo%3A'+repoEncoded});
+        const versions = new Set<string>();
+        for (const code of codes) {
+            const response = await fetch(code.url);
+            const content = await response.text();
+            console.log(content)
+            const json = JSON.parse(content);
+            const version: string|null = json?.dependencies?.langium || json?.devDependencies?.langium || null;
+            version && versions.add(version);
+        }
+        if(versions.size > 0) {
+            results.push({
+                owner: repo.owner!.name!,
+                name: repo.name,
+                versions: [...versions]
+            });
+        }
+    }
+    return results;
+}
