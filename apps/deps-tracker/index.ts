@@ -1,4 +1,3 @@
-import { writeFile } from "fs/promises";
 import { getRepositoriesUsingNpmPackage } from "../../libs/github/queries";
 import { createDatabase } from "../../libs/notion/database";
 import { relation, title, id } from "../../libs/notion/properties";
