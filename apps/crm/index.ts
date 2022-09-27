@@ -5,7 +5,7 @@ const crm = Notion.createCRM();
 
 async function forEachRepository(callback: (repository: Notion.Repository, name: GitHub.RepositoryName) => Promise<void>) {
   const RepositoryAddressPattern = /^https:\/\/github.com\/([^\/]+)\/([^\/]+)$/;
-  for (const repository of await crm.repositories.all()) {
+  for (const repository of (await crm.repositories).all()) {
     const params = RepositoryAddressPattern.exec(repository.address);
     if(!params) {
       continue;
@@ -20,8 +20,10 @@ async function forEachRepository(callback: (repository: Notion.Repository, name:
 }
 
 (async function() {
-  await crm.repositories.all();
+  await crm.repositories;
   console.log('Initialized CRM...');
+
+  const persons = await crm.persons;
 
   await forEachRepository(async (repo, name) => {
     for await (let user of GitHub.getStargazers('cache', name)) {
@@ -30,8 +32,8 @@ async function forEachRepository(callback: (repository: Notion.Repository, name:
       const name = user.name ?? user.login;
       const website = user.blog  ?? undefined;
       const email = user.email ?? undefined;
-      if(await crm.persons.has(key)) {
-        const entry = {...await crm.persons.get(key)};
+      if(persons.has(key)) {
+        const entry = {...persons.get(key)};
         entry.website = website;
         entry.avatar = avatar;
         entry.name = name;
@@ -40,14 +42,14 @@ async function forEachRepository(callback: (repository: Notion.Repository, name:
         if(starIds.indexOf(repo.id) === -1) {
           entry.stars = [...(entry.stars ?? []), repo];
         }
-        const changes = await crm.persons.update(entry.id, entry);
+        const changes = await persons.update(entry.id, entry);
         if(changes.length) {
           console.log(`Updated '${name}' (${JSON.stringify(changes)})`);
         } else {
           console.log(`Skipped '${name}'`);
         }
       } else {
-        await crm.persons.create({
+        await persons.create({
           avatar,
           name,
           website,

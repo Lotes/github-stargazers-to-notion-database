@@ -17,16 +17,16 @@ interface LangiumRepo {
 }
 
 interface LangiumDependencies {
-    versions: Database<LangiumVersion, 'name'>;
-    repositories: Database<LangiumRepo, 'name'>;
+    versions: Promise<Database<LangiumVersion, 'name'>>;
+    repositories: Promise<Database<LangiumRepo, 'name'>>;
 }
 
 export const LangiumDependenciesModule: Module<LangiumDependencies> = {
-    repositories: (deps) => createDatabase<LangiumRepo, 'name'>('ec015d3650994362bc8e7e9fff497211', 'name', 
+    repositories: async (deps) => createDatabase<LangiumRepo, 'name'>('ec015d3650994362bc8e7e9fff497211', 'name', 
         [
             id(),
             title('Name', 'name'),
-            relation('Versions', 'name', deps.versions)
+            relation('Versions', 'name', await deps.versions)
         ]),
     versions: () => createDatabase<LangiumVersion, 'name'>('7e2d16df8be24e01bc84173df9073f5d', "name", 
         [
@@ -42,29 +42,31 @@ export function createModule() {
 (async function() {
     const db = createModule();
     const versions = await getRepositoriesUsingNpmPackage('langium');
+    const api = await db.versions;
+    const repos = await db.repositories;
     for (const repo of versions) {
         const notionVersions = [];
         for (const version of repo.versions) {
-            if(!await db.versions.has(version)) {
-                await db.versions.create({
+            if(!api.has(version)) {
+                await api.create({
                     name: version
                 });
             }
-            const notionVersion = await db.versions.get(version);
+            const notionVersion = api.get(version);
             notionVersions.push(notionVersion);
         }
 
         const repoName = `${repo.owner}/${repo.name}`;
-        if(await db.repositories.has(repoName)) {
-            const notionRepo  = await db.repositories.get(repoName);
-            await db.repositories.update(notionRepo.id, {
+        if(repos.has(repoName)) {
+            const notionRepo  = repos.get(repoName);
+            await repos.update(notionRepo.id, {
                 id: notionRepo.id,
                 name: repoName,
                 versions: notionVersions
             });
             console.log(`Updated ${repoName}`)
         } else {
-            await db.repositories.create({
+            await repos.create({
                 name: repoName,
                 versions: notionVersions
             });

@@ -29,8 +29,8 @@ export interface Repository extends Entity {
 }
 
 export type CRM = {
-    repositories: Database<Repository, 'address'>;
-    persons: Database<Person, 'github'>;  
+    repositories: Promise<Database<Repository, 'address'>>;
+    persons: Promise<Database<Person, 'github'>>;  
 }
 
 export const CRMModule: Module<CRM> = {
@@ -40,7 +40,7 @@ export const CRMModule: Module<CRM> = {
             title('Name', 'name'),
             url('Address', 'address')
         ]),
-    persons: (crm) => createDatabase<Person, 'github'>(Guids.Persons, "github", 
+    persons: async(crm) => createDatabase<Person, 'github'>(Guids.Persons, "github", 
         [
             id(),
             icon("avatar"),
@@ -48,7 +48,7 @@ export const CRMModule: Module<CRM> = {
             url('Website', 'website'),
             url('Github', 'github'),
             email('Email', 'email'),
-            relation('Stars', 'stars', crm.repositories)
+            relation('Stars', 'stars', await crm.repositories)
         ])
 }
 

@@ -22,7 +22,7 @@ export async function paginate<R>(databaseId: string, changers: Changer<R>[]) {
     }
 }
 
-export function createDatabase<R extends Entity, K extends keyof R>(databaseId: string, key: K, changers: Changer<R>[]): Database<R, K> {
+export async function createDatabase<R extends Entity, K extends keyof R>(databaseId: string, key: K, changers: Changer<R>[]): Promise<Database<R, K>> {
     const setByKey = new Map<R[K], R>();
     const setById = new Map<string, R>();
     const initialized = (async function ensureInitialized(): Promise<void> {
@@ -31,10 +31,9 @@ export function createDatabase<R extends Entity, K extends keyof R>(databaseId: 
             setById.set(row.id, row);
         }
     })();
+    await initialized;
 
     async function create(row: Exclude<R, 'id'>): Promise<string> {
-        await initialized;
-
         let page: CreatePageParameters = {parent: {database_id: databaseId}, properties: {}};
         for (const changer of changers) {
             changer.toPage(row, page);
@@ -47,8 +46,6 @@ export function createDatabase<R extends Entity, K extends keyof R>(databaseId: 
     }
 
     async function update(id: string, newRow: R): Promise<(keyof R)[]> {
-        await initialized;
-    
         const oldRow = await getById(id);
         let page: UpdatePageParameters = {page_id: id, properties: {}};
         let change = false;
@@ -69,13 +66,11 @@ export function createDatabase<R extends Entity, K extends keyof R>(databaseId: 
         return changes;
     }
 
-    async function get(key: R[K]) {
-        await initialized;
+    function get(key: R[K]) {
         return setByKey.get(key)!;
     }
     
-    async function has(key: R[K]) {
-        await initialized;
+    function has(key: R[K]) {
         return setByKey.has(key);
     }
 
@@ -83,13 +78,11 @@ export function createDatabase<R extends Entity, K extends keyof R>(databaseId: 
         return row[key];
     }
 
-    async function all() {
-        await initialized;
+    function all() {
         return [...setByKey.values()];
     }
 
-    async function getById(id: string): Promise<R> {
-        await initialized;
+    function getById(id: string): R {
         return setById.get(id)!;
     }
 

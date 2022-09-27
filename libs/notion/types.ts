@@ -3,12 +3,12 @@ export type Entity = {id: string};
 export interface Database<R extends Entity, K extends keyof R> {
   readonly id: string;
   create(row: Omit<R, 'id'>): Promise<string>;
-  all(): Promise<R[]>;
-  keyOf(row: R): R[K];
-  get(key: R[K]): Promise<R>;
-  getById(id: string): Promise<R>;
-  has(key: R[K]): Promise<boolean>;
   update(id: string, newRow: R): Promise<(keyof R)[]>;
+  all(): R[];
+  keyOf(row: R): R[K];
+  get(key: R[K]): R;
+  getById(id: string): R;
+  has(key: R[K]): boolean;
 }
 
 export interface Changer<R> {
